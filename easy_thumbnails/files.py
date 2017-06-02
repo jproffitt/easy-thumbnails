@@ -633,6 +633,21 @@ class Thumbnailer(File):
             return None
         source = self.get_source_cache(create=True)
         update_modified = (update or create) and timezone.now()
+
+        if not update_modified and not create:
+            if not hasattr(self, '_thumbnail_cache_queryset'):
+                self._thumbnail_cache_queryset = {
+                    thumb.name: thumb
+                    for thumb in models.Thumbnail.objects._get_thumbnail_manager().filter(
+                        source=source,
+                        storage_hash=utils.get_storage_hash(self.thumbnail_storage),
+                    )
+                }
+
+            thumbnail = self._thumbnail_cache_queryset.get(thumbnail_name)
+            if thumbnail or not self.thumbnail_check_cache_miss:
+                return thumbnail
+
         return models.Thumbnail.objects.get_file(
             create=create, update_modified=update_modified,
             storage=self.thumbnail_storage, source=source, name=thumbnail_name,
