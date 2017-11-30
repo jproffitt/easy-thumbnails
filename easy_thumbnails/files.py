@@ -474,7 +474,7 @@ class Thumbnailer(File):
         if transparent_name not in names:
             names.append(transparent_name)
 
-        for filename in names:
+        for filename in set(names):
             exists = self.thumbnail_exists(filename)
             if exists:
                 thumbnail_file = ThumbnailFile(
